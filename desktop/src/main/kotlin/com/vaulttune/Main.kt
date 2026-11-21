@@ -109,7 +109,7 @@ fun SearchScreen() {
                     settings.accountName = identity.name
                     settings.youtubeCookie = YouTube.cookie.orEmpty()
                 }
-                .onFailure { t -> error = "Login failed: ${t.message ?: t}" }
+                .onFailure { t -> error = t.stackTraceToString() }
             loggingIn = false
         }
     }
