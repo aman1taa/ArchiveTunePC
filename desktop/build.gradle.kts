@@ -20,6 +20,8 @@ dependencies {
     implementation(libs.vlcj)
     implementation(libs.okhttp)
     implementation(libs.jcefmaven)
+    implementation(libs.ktor.serialization.json)
+    implementation(libs.json)
 
     implementation(project(":core"))
     implementation(project(":morideobfuscator"))
