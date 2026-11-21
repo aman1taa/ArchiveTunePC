@@ -47,3 +47,6 @@ listOf(
     include(":lyrics:$name")
     project(":lyrics:$name").projectDir = file("../lyrics/$name")
 }
+
+include(":morideobfuscator")
+project(":morideobfuscator").projectDir = file("../morideobfuscator")

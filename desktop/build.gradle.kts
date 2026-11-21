@@ -18,8 +18,10 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.multiplatform.settings)
     implementation(libs.vlcj)
+    implementation(libs.okhttp)
 
     implementation(project(":core"))
+    implementation(project(":morideobfuscator"))
 
     implementation(project(":lyrics:kugou"))
     implementation(project(":lyrics:lrclib"))
