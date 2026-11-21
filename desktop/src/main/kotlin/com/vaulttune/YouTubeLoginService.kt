@@ -1,6 +1,5 @@
 package com.vaulttune
 
-import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
@@ -10,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import moe.rukamori.archivetune.innertube.YouTube
+import java.nio.file.Path
 
 data class AccountIdentity(
     val name: String,
@@ -27,24 +27,23 @@ class YouTubeLoginService {
         withContext(Dispatchers.IO) {
             runCatching {
                 var playwright: Playwright? = null
-                var browser: Browser? = null
+                var context: BrowserContext? = null
                 try {
                     playwright = Playwright.create()
-                    browser =
-                        playwright.chromium().launch(
-                            BrowserType.LaunchOptions()
+                    val profile = Path.of(System.getProperty("user.home"), ".vaulttune", "chrome-profile")
+                    context =
+                        playwright.chromium().launchPersistentContext(
+                            profile,
+                            BrowserType.LaunchPersistentContextOptions()
                                 .setHeadless(false)
-                                .setChannel("chrome"), // real Chrome, not the flagged Playwright build
+                                .setChannel("chrome")
+                                .setViewportSize(1280, 800)
+                                .setArgs(listOf("--disable-blink-features=AutomationControlled")),
                         )
-                    val context =
-                        browser.newContext(
-                            Browser.NewContextOptions().setViewportSize(1280, 800),
-                        )
-                    // Hide the automation marker Google uses to reject sign-in.
                     context.addInitScript(
                         "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });",
                     )
-                    val page = context.newPage()
+                    val page = context.pages().firstOrNull() ?: context.newPage()
                     page.navigate(
                         "https://music.youtube.com/",
                         Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED),
@@ -55,7 +54,7 @@ class YouTubeLoginService {
                     val info = YouTube.accountInfo().getOrThrow()
                     AccountIdentity(info.name, info.email.orEmpty())
                 } finally {
-                    runCatching { browser?.close() }
+                    runCatching { context?.close() }
                     runCatching { playwright?.close() }
                 }
             }
