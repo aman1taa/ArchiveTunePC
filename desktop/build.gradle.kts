@@ -56,6 +56,7 @@ compose.desktop {
             packageVersion = "0.1.0"
             description = "VaultTune — desktop port of ArchiveTune"
             vendor = "VaultTune"
+            includeAllModules = true
         }
     }
 }
