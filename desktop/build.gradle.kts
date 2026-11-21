@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.multiplatform.settings)
     implementation(libs.vlcj)
     implementation(libs.okhttp)
-    implementation(libs.jcefmaven)
+    implementation(libs.playwright)
     implementation(libs.ktor.serialization.json)
     implementation(libs.json)
 
@@ -60,12 +60,10 @@ compose.desktop {
     }
 }
 
-tasks.test {
-    // JCEF requires opening these JDK internal modules on Java 9+.
-    jvmArgs(
-        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.java2d=ALL-UNNAMED",
-        "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-exports=java.desktop/sun.java2d=ALL-UNNAMED",
-    )
+tasks.register<JavaExec>("installPlaywright") {
+    group = "playwright"
+    description = "Downloads the Chromium browser used by Playwright."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.microsoft.playwright.CLI")
+    args("install", "chromium")
 }

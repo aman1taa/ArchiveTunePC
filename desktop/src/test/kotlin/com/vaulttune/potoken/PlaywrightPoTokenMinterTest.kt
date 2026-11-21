@@ -2,21 +2,11 @@ package com.vaulttune.potoken
 
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
-import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
-/**
- * End-to-end test of the JCEF-based BotGuard poToken minting.
- *
- * Ignored for now: the JCEF (embedded Chromium) browser does not load pages in a
- * headless Gradle test on this machine (OSR needs a render handler, non-OSR
- * crashes the JVM). The minting code is structurally complete; the browser layer
- * needs to run inside the real desktop app (visible window) or via an external
- * Chromium (e.g. Playwright).
- */
-class JcefBotGuardMinterTest {
-    @Ignore("JCEF browser does not load headlessly; needs a window or external Chromium")
+/** End-to-end test of the Playwright-based BotGuard poToken minting. */
+class PlaywrightPoTokenMinterTest {
     @Test
     fun mintsToken() =
         runBlocking {
@@ -25,6 +15,7 @@ class JcefBotGuardMinterTest {
                     .getResourceAsStream("po_token.html")!!
                     .bufferedReader()
                     .use { it.readText() }
+            val script = html.substringAfter("<script>", "").substringBefore("</script>", "")
 
             val client =
                 OkHttpClient
@@ -35,7 +26,7 @@ class JcefBotGuardMinterTest {
                     .build()
             val http = BotGuardHttp(client, USER_AGENT)
 
-            val minter = JcefBotGuardMinter(http, html)
+            val minter = PlaywrightPoTokenMinter(http, script)
             try {
                 minter.initialize()
                 println("Minter ready")

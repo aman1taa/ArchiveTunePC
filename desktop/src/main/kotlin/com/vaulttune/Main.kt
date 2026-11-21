@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,14 +68,31 @@ fun App() {
 
 @Composable
 fun SearchScreen() {
-    val repository = koinInject<SearchRepository>()
+    val playback = koinInject<PlaybackService>()
+    val audioPlayer = koinInject<AudioPlayer>()
     val settings = koinInject<AppSettings>()
 
     var query by remember { mutableStateOf(settings.lastQuery) }
     var results by remember { mutableStateOf<List<SongItem>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var resolvingId by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+
+    fun play(song: SongItem) {
+        scope.launch {
+            resolvingId = song.id
+            error = null
+            try {
+                val stream = playback.resolve(song)
+                audioPlayer.play(stream.url)
+            } catch (t: Throwable) {
+                error = "Playback failed: ${t.message ?: t}"
+            } finally {
+                resolvingId = null
+            }
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -101,7 +119,7 @@ fun SearchScreen() {
                         error = null
                         results = emptyList()
                         try {
-                            results = repository.searchSongs(q)
+                            results = playback.searchSongs(q)
                             settings.lastQuery = q
                         } catch (t: Throwable) {
                             error = t.message ?: t.toString()
@@ -124,13 +142,23 @@ fun SearchScreen() {
             results.isEmpty() -> Text("No results yet.")
             else -> LazyColumn {
                 items(results) { song ->
-                    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                        Text(song.title, style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            song.artists.joinToString(", ") { it.name },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(song.title, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                song.artists.joinToString(", ") { it.name },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        if (resolvingId == song.id) {
+                            CircularProgressIndicator(Modifier.padding(horizontal = 16.dp))
+                        } else {
+                            TextButton(onClick = { play(song) }) { Text("Play") }
+                        }
                     }
                 }
             }
