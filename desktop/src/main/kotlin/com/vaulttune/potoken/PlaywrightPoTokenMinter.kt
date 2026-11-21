@@ -5,6 +5,7 @@ import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import com.microsoft.playwright.options.WaitUntilState
+import com.vaulttune.ChromeLocator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -28,7 +29,9 @@ class PlaywrightPoTokenMinter(
             withTimeout(INIT_TIMEOUT_MS) {
                 println("[pw] launching chromium")
                 playwright = Playwright.create()
-                browser = playwright.chromium().launch(BrowserType.LaunchOptions().setHeadless(true))
+                val launchOptions = BrowserType.LaunchOptions().setHeadless(true)
+                ChromeLocator.findChromiumExecutable()?.let { launchOptions.setExecutablePath(java.nio.file.Path.of(it)) }
+                browser = playwright.chromium().launch(launchOptions)
                 page =
                     browser
                         .newContext(
