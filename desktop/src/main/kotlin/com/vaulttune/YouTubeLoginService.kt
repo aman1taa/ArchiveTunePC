@@ -30,13 +30,20 @@ class YouTubeLoginService {
                 var browser: Browser? = null
                 try {
                     playwright = Playwright.create()
-                    browser = playwright.chromium().launch(BrowserType.LaunchOptions().setHeadless(false))
+                    browser =
+                        playwright.chromium().launch(
+                            BrowserType.LaunchOptions()
+                                .setHeadless(false)
+                                .setChannel("chrome"), // real Chrome, not the flagged Playwright build
+                        )
                     val context =
                         browser.newContext(
-                            Browser.NewContextOptions()
-                                .setUserAgent(USER_AGENT)
-                                .setViewportSize(1280, 800),
+                            Browser.NewContextOptions().setViewportSize(1280, 800),
                         )
+                    // Hide the automation marker Google uses to reject sign-in.
+                    context.addInitScript(
+                        "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });",
+                    )
                     val page = context.newPage()
                     page.navigate(
                         "https://music.youtube.com/",
@@ -71,7 +78,5 @@ class YouTubeLoginService {
     companion object {
         private const val LOGIN_TIMEOUT_MS = 5 * 60 * 1000L
         private val SAPISID_NAMES = setOf("SAPISID", "__Secure-3PAPISID", "__Secure-1PAPISID")
-        private const val USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
     }
 }
