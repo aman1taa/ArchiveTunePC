@@ -14,6 +14,9 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.coroutines.core)
+    implementation(libs.koin.core)
+    implementation(libs.koin.compose)
+    implementation(libs.multiplatform.settings)
 
     implementation(project(":core"))
 

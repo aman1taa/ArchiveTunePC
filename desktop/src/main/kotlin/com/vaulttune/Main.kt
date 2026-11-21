@@ -29,17 +29,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import kotlinx.coroutines.Dispatchers
+import com.vaulttune.di.appModule
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import moe.rukamori.archivetune.innertube.NetworkGatekeeperControl
 import moe.rukamori.archivetune.innertube.YouTube
 import moe.rukamori.archivetune.innertube.models.SongItem
 import moe.rukamori.archivetune.innertube.models.YouTubeLocale
+import org.koin.compose.koinInject
+import org.koin.core.context.startKoin
 
 fun main() {
+    val koin = startKoin { modules(appModule) }.koin
     NetworkGatekeeperControl.allowConnections()
-    YouTube.locale = YouTubeLocale(gl = "US", hl = "en")
+
+    val settings = koin.get<AppSettings>()
+    YouTube.locale = YouTubeLocale(gl = settings.localeGl, hl = settings.localeHl)
+
     application {
         Window(
             onCloseRequest = ::exitApplication,
@@ -62,7 +67,10 @@ fun App() {
 
 @Composable
 fun SearchScreen() {
-    var query by remember { mutableStateOf("") }
+    val repository = koinInject<SearchRepository>()
+    val settings = koinInject<AppSettings>()
+
+    var query by remember { mutableStateOf(settings.lastQuery) }
     var results by remember { mutableStateOf<List<SongItem>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -86,19 +94,15 @@ fun SearchScreen() {
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = {
+                    val q = query.trim()
+                    if (q.isEmpty()) return@Button
                     scope.launch {
                         loading = true
                         error = null
                         results = emptyList()
                         try {
-                            val result = withContext(Dispatchers.IO) {
-                                YouTube.search(
-                                    query.trim(),
-                                    YouTube.SearchFilter.FILTER_SONG,
-                                    useAccountContext = false,
-                                )
-                            }
-                            results = result.getOrThrow().items.filterIsInstance<SongItem>()
+                            results = repository.searchSongs(q)
+                            settings.lastQuery = q
                         } catch (t: Throwable) {
                             error = t.message ?: t.toString()
                         } finally {
