@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.multiplatform.settings)
     implementation(libs.vlcj)
     implementation(libs.okhttp)
+    implementation(libs.jcefmaven)
 
     implementation(project(":core"))
     implementation(project(":morideobfuscator"))
@@ -55,4 +56,14 @@ compose.desktop {
             vendor = "VaultTune"
         }
     }
+}
+
+tasks.test {
+    // JCEF requires opening these JDK internal modules on Java 9+.
+    jvmArgs(
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.java2d=ALL-UNNAMED",
+        "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-exports=java.desktop/sun.java2d=ALL-UNNAMED",
+    )
 }
