@@ -67,3 +67,16 @@ tasks.register<JavaExec>("installPlaywright") {
     mainClass.set("com.microsoft.playwright.CLI")
     args("install", "chromium")
 }
+
+// Bundles the Playwright Chromium into the distributable so the .exe is self-contained.
+tasks.register<Copy>("bundleChromium") {
+    dependsOn("createDistributable")
+    val ms = file(System.getProperty("user.home")).resolve("AppData/Local/ms-playwright")
+    val chromeDir = ms.walkTopDown().firstOrNull {
+        it.isDirectory && it.name.startsWith("chrome-win") && it.resolve("chrome.exe").isFile
+    }
+    if (chromeDir != null) {
+        from(chromeDir)
+        into(layout.buildDirectory.dir("compose/binaries/main/app/VaultTune/browsers/chromium"))
+    }
+}
