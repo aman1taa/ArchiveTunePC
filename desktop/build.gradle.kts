@@ -1,23 +1,36 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("jvm") version "2.4.21"
-    id("org.jetbrains.compose") version "1.13.0-rc01"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 group = "com.vaulttune"
 version = "0.1.0"
 
-repositories {
-    google()
-    mavenCentral()
-}
-
 dependencies {
-    implementation("org.jetbrains.compose.ui:ui:1.13.0-rc01")
-    implementation("org.jetbrains.compose.foundation:foundation:1.13.0-rc01")
-    implementation("org.jetbrains.compose.material3:material3:1.13.0-rc01")
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation(libs.coroutines.core)
+
+    implementation(project(":core"))
+
+    implementation(project(":lyrics:kugou"))
+    implementation(project(":lyrics:lrclib"))
+    implementation(project(":lyrics:simpmusic"))
+    implementation(project(":lyrics:paxsenix"))
+    implementation(project(":lyrics:betterlyrics"))
+    implementation(project(":lyrics:unison"))
+    implementation(project(":lyrics:youlyplus"))
+    implementation(project(":lyrics:lrcred"))
+    implementation(project(":lyrics:binimum"))
+    implementation(project(":lyrics:megalobiz"))
+    implementation(project(":lyrics:musixmatch"))
+
+    testImplementation(libs.junit)
+    testImplementation(libs.coroutines.core)
 }
 
 kotlin {
