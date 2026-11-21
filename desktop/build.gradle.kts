@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
     implementation(libs.multiplatform.settings)
+    implementation(libs.vlcj)
 
     implementation(project(":core"))
 
