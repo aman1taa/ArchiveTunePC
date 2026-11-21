@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,6 +46,7 @@ fun main() {
 
     val settings = koin.get<AppSettings>()
     YouTube.locale = YouTubeLocale(gl = settings.localeGl, hl = settings.localeHl)
+    settings.youtubeCookie.takeIf { it.isNotBlank() }?.let { YouTube.cookie = it }
 
     application {
         Window(
@@ -70,6 +72,7 @@ fun App() {
 fun SearchScreen() {
     val playback = koinInject<PlaybackService>()
     val audioPlayer = koinInject<AudioPlayer>()
+    val loginService = koinInject<YouTubeLoginService>()
     val settings = koinInject<AppSettings>()
 
     var query by remember { mutableStateOf(settings.lastQuery) }
@@ -77,6 +80,8 @@ fun SearchScreen() {
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var resolvingId by remember { mutableStateOf<String?>(null) }
+    var accountName by remember { mutableStateOf(settings.accountName.ifBlank { null }) }
+    var loggingIn by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun play(song: SongItem) {
@@ -94,11 +99,43 @@ fun SearchScreen() {
         }
     }
 
+    fun login() {
+        scope.launch {
+            loggingIn = true
+            error = null
+            loginService.login()
+                .onSuccess { identity ->
+                    accountName = identity.name
+                    settings.accountName = identity.name
+                    settings.youtubeCookie = YouTube.cookie.orEmpty()
+                }
+                .onFailure { t -> error = "Login failed: ${t.message ?: t}" }
+            loggingIn = false
+        }
+    }
+
+    fun logout() {
+        YouTube.cookie = null
+        accountName = null
+        settings.accountName = ""
+        settings.youtubeCookie = ""
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
     ) {
-        Text("VaultTune", style = MaterialTheme.typography.headlineLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("VaultTune", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.weight(1f))
+            if (loggingIn) {
+                CircularProgressIndicator(Modifier.size(20.dp))
+            } else if (accountName != null) {
+                Text(accountName!!, style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = ::logout) { Text("Logout") }
+            } else {
+                TextButton(onClick = ::login) { Text("Login") }
+            }
+        }
         Spacer(Modifier.height(8.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {

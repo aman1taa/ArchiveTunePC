@@ -8,6 +8,7 @@ import com.vaulttune.ClasspathYoutubeiHost
 import com.vaulttune.PlaybackService
 import com.vaulttune.SearchRepository
 import com.vaulttune.VlcjPlayer
+import com.vaulttune.YouTubeLoginService
 import com.vaulttune.potoken.BotGuardHttp
 import com.vaulttune.potoken.PlaywrightPoTokenMinter
 import moe.rukamori.archivetune.morideobfuscator.youtubei.YoutubeiHost
@@ -69,4 +70,5 @@ val appModule =
             PlaywrightPoTokenMinter(get(), script)
         }
         single { PlaybackService(get(), get(), get()) }
+        single { YouTubeLoginService() }
     }

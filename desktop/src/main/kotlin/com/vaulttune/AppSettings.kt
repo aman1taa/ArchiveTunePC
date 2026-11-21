@@ -20,4 +20,12 @@ class AppSettings(
     var lastQuery: String
         get() = settings.getString("last_query", "")
         set(value) = settings.putString("last_query", value)
+
+    var youtubeCookie: String
+        get() = settings.getString("youtube_cookie", "")
+        set(value) = settings.putString("youtube_cookie", value)
+
+    var accountName: String
+        get() = settings.getString("account_name", "")
+        set(value) = settings.putString("account_name", value)
 }
